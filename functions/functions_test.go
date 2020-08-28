@@ -33,26 +33,29 @@ func (t *testStructMethod) unexportedMethod() bool {
 func TestStructMethod(t *testing.T) {
 	t.Parallel()
 	a := testStructMethod(1)
-	// ReturnBool
-	val, err := StructMethod(&a, "ReturnBool")
-	assert.NoError(t, err)
-	valBool := val.(bool)
-	assert.Equal(t, true, valBool)
-	// ReturnInt
-	val, err = StructMethod(&a, "ReturnInt", 2)
-	assert.NoError(t, err)
-	valInt := val.(int)
-	assert.Equal(t, 20, valInt)
-	// ReturnString
-	val, err = StructMethod(&a, "ReturnString", "Santiago", " Rodriguez")
-	assert.NoError(t, err)
-	valString := val.(string)
-	assert.Equal(t, "Santiago Rodriguez", valString)
-	// ReturnError
-	_, err = StructMethod(&a, "ReturnError")
-	assert.Error(t, err)
-	assert.Equal(t, "functions: test error", err.Error(), "expect same error msg")
-
+	t.Run("return bool", func(t *testing.T) {
+		val, err := StructMethod(&a, "ReturnBool")
+		assert.NoError(t, err)
+		valBool := val.(bool)
+		assert.Equal(t, true, valBool)
+	})
+	t.Run("return int", func(t *testing.T) {
+		val, err := StructMethod(&a, "ReturnInt", 2)
+		assert.NoError(t, err)
+		valInt := val.(int)
+		assert.Equal(t, 20, valInt)
+	})
+	t.Run("return string", func(t *testing.T) {
+		val, err := StructMethod(&a, "ReturnString", "Santiago", " Rodriguez")
+		assert.NoError(t, err)
+		valString := val.(string)
+		assert.Equal(t, "Santiago Rodriguez", valString)
+	})
+	t.Run("return error", func(t *testing.T) {
+		_, err := StructMethod(&a, "ReturnError")
+		assert.Error(t, err)
+		assert.Equal(t, "functions: test error", err.Error(), "expect same error msg")
+	})
 	testErrors := map[string]struct {
 		FnArgs []interface{}
 	}{
@@ -101,27 +104,40 @@ func TestStructProperty(t *testing.T) {
 		"hi",
 		25,
 	}
-	p2, err := StructProperty(s, "PropTwo")
-	assert.NoError(t, err)
-	p2Stringed := p2.(string)
-	assert.Equal(t, s.PropTwo, p2Stringed)
 
-	_, err = StructProperty(s, "propOne")
-	assert.Error(t, err)
+	t.Run("get struct property PropTwo", func(t *testing.T) {
+		p2, err := StructProperty(s, "PropTwo")
+		assert.NoError(t, err)
+		p2Stringed := p2.(string)
+		assert.Equal(t, s.PropTwo, p2Stringed)
 
-	age, err := StructProperty(s, "Age")
-	assert.NoError(t, err)
-	ageInt := age.(int64)
-	assert.Equal(t, s.Age, ageInt)
+	})
 
-	_, err = StructProperty(s, "unknownField")
-	assert.Error(t, err)
+	t.Run("get struct property propOne", func(t *testing.T) {
+		_, err := StructProperty(s, "propOne")
+		assert.Error(t, err)
 
-	_, err = StructProperty(s, 123)
-	assert.Error(t, err)
+	})
 
-	_, err = StructProperty(s)
-	assert.Error(t, err)
+	t.Run("get struct property Age", func(t *testing.T) {
+		age, err := StructProperty(s, "Age")
+		assert.NoError(t, err)
+		ageInt := age.(int64)
+		assert.Equal(t, s.Age, ageInt)
+
+	})
+
+	t.Run("invalid args", func(t *testing.T) {
+		_, err := StructProperty(s, "unknownField")
+		assert.Error(t, err)
+
+		_, err = StructProperty(s, 123)
+		assert.Error(t, err)
+
+		_, err = StructProperty(s)
+		assert.Error(t, err)
+
+	})
 }
 
 func TestPreProcessFnEmpty(t *testing.T) {
