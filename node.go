@@ -16,7 +16,7 @@ type Comparer interface {
 
 // Node Type
 type Node struct {
-	Childes []*Node `json:"-"`
+	Children []*Node `json:"-"`
 
 	ID             int                   `json:"id"`
 	ParentID       int                   `json:"parentId"`
@@ -29,19 +29,19 @@ type Node struct {
 
 // NextNode ...
 func (n *Node) NextNode(input interface{}) (interface{}, error) {
-	if len(n.Childes) == 0 {
+	if len(n.Children) == 0 {
 		return n.Result.Value, nil
 	}
 	resValue, err := getValueToCompare(input, n.PreProcessFn, n.PreProcessArgs)
 	if err != nil {
 		return nil, err
 	}
-	for _, c := range n.Childes {
+	for _, c := range n.Children {
 		if c.Comparer.Compare(resValue, c.ValueToCompare.Value) {
 			return c.NextNode(input)
 		}
 	}
-	return nil, errors.New("value not found when comparing with all childes nodes")
+	return nil, errors.New("value not found when comparing with all children nodes")
 }
 
 func getValueToCompare(input interface{}, fn function.PreProcessFn, args []*value.Value) (interface{}, error) {

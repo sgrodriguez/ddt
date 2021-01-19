@@ -43,7 +43,7 @@ func TestResolveTree_SimpleTree(t *testing.T) {
 		Result:         &value.Value{Value: "prize4", Type: value.String},
 	}
 	node1 := Node{
-		Childes:        []*Node{&leaf11, &leaf12, &leaf13},
+		Children:       []*Node{&leaf11, &leaf12, &leaf13},
 		ID:             2,
 		ParentID:       0,
 		ValueToCompare: &value.Value{Value: int64(60), Type: value.Int64},
@@ -52,7 +52,7 @@ func TestResolveTree_SimpleTree(t *testing.T) {
 	root := Node{
 		ID:       0,
 		ParentID: -1,
-		Childes:  []*Node{&node1, &leaf1},
+		Children: []*Node{&node1, &leaf1},
 	}
 	simpleTree, err := NewTree("simpleTree", &root)
 	require.NoError(t, err)
@@ -138,7 +138,7 @@ func userTree() *Tree {
 	node1 := &Node{
 		ID:             1,
 		ParentID:       0,
-		Childes:        []*Node{node3, node4},
+		Children:       []*Node{node3, node4},
 		ValueToCompare: &value.Value{Type: value.Bool, Value: true},
 		PreProcessArgs: []*value.Value{{Type: value.String, Value: "FullName"}},
 		PreProcessFn:   function.PreProcessFn{Function: function.StructMethod, Name: "StructMethod"},
@@ -147,14 +147,14 @@ func userTree() *Tree {
 	node2 := &Node{
 		ID:             2,
 		ParentID:       0,
-		Childes:        []*Node{node5, node6},
+		Children:       []*Node{node5, node6},
 		ValueToCompare: &value.Value{Type: value.Bool, Value: false},
 		Comparer:       &compare.Equal{},
 		PreProcessArgs: []*value.Value{{Type: value.String, Value: "Age"}},
 		PreProcessFn:   function.PreProcessFn{Function: function.StructAttribute, Name: "StructAttribute"},
 	}
 	root := &Node{
-		Childes:        []*Node{node1, node2},
+		Children:       []*Node{node1, node2},
 		PreProcessArgs: []*value.Value{{Type: value.String, Value: "UnderAge"}},
 		PreProcessFn:   function.PreProcessFn{Function: function.StructMethod, Name: "StructMethod"},
 		ID:             0,
@@ -196,7 +196,7 @@ func TestResolveTree_UserTree(t *testing.T) {
 	t.Run("handle empty/invalid user", func(t *testing.T) {
 		_, err = ResolveTree(userTree, &user{})
 		require.Error(t, err)
-		assert.EqualError(t, err, "value not found when comparing with all childes nodes")
+		assert.EqualError(t, err, "value not found when comparing with all children nodes")
 		_, err = ResolveTree(userTree, nil)
 		require.Error(t, err)
 		assert.EqualError(t, err, "structMethod invalid methods args")
@@ -206,20 +206,20 @@ func TestResolveTree_UserTree(t *testing.T) {
 
 	})
 	t.Run("handling method error", func(t *testing.T) {
-		node1 := userTree.Root.Childes[0]
+		node1 := userTree.Root.Children[0]
 		node1.PreProcessArgs = []*value.Value{{Type: value.String, Value: "ReturnErr"}}
 		_, err = ResolveTree(userTree, &user{Age: 11})
 		require.Error(t, err)
 		assert.EqualError(t, err, "always error")
 	})
 	t.Run("invalid method name", func(t *testing.T) {
-		node1 := userTree.Root.Childes[0]
+		node1 := userTree.Root.Children[0]
 		node1.PreProcessArgs = []*value.Value{{Type: value.String, Value: "ASD"}}
 		_, err = ResolveTree(userTree, &user{Age: 11})
 		assert.EqualError(t, err, "structMethod invalid methods args")
 	})
 	t.Run("invalid struct attribute name", func(t *testing.T) {
-		node2 := userTree.Root.Childes[1]
+		node2 := userTree.Root.Children[1]
 		node2.PreProcessArgs = []*value.Value{{Type: value.String, Value: "ASD"}}
 		_, err = ResolveTree(userTree, &user{Age: 30})
 		assert.EqualError(t, err, "structAttribute invalid struct attribute")

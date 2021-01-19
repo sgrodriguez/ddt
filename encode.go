@@ -41,10 +41,10 @@ func (t *Tree) UnmarshalJSON(data []byte) error {
 			t.Root = n
 			continue
 		}
-		childes := keyParentOf[n.ParentID]
-		keyParentOf[n.ParentID] = append(childes, n)
+		children := keyParentOf[n.ParentID]
+		keyParentOf[n.ParentID] = append(children, n)
 	}
-	setChildesToParentNodes(t.Root, keyParentOf)
+	setChildrenToParentNodes(t.Root, keyParentOf)
 	return nil
 }
 
@@ -55,20 +55,20 @@ func getAllNodes(root *Node) []*Node {
 		top := queue[0]
 		queue = queue[1:]
 		res = append(res, top)
-		for _, c := range top.Childes {
+		for _, c := range top.Children {
 			queue = append(queue, c)
 		}
 	}
 	return res
 }
 
-func setChildesToParentNodes(root *Node, keyParentOf map[int][]*Node) {
+func setChildrenToParentNodes(root *Node, keyParentOf map[int][]*Node) {
 	queue := []*Node{root}
 	for len(queue) != 0 {
 		top := queue[0]
 		queue = queue[1:]
 		for _, n := range keyParentOf[top.ID] {
-			top.Childes = append(top.Childes, n)
+			top.Children = append(top.Children, n)
 			queue = append(queue, n)
 		}
 	}
