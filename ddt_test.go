@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/sgrodriguez/ddt/comparator"
+	"github.com/sgrodriguez/ddt/compare"
 	"github.com/sgrodriguez/ddt/function"
 	"github.com/sgrodriguez/ddt/value"
 )
@@ -18,28 +18,28 @@ func TestResolveTree_SimpleTree(t *testing.T) {
 		ID:             1,
 		ParentID:       0,
 		ValueToCompare: &value.Value{Value: int64(60), Type: value.Int64},
-		Comparer:       &comparator.Greater{},
+		Comparer:       &compare.Greater{},
 		Result:         &value.Value{Value: "prize1", Type: value.String},
 	}
 	leaf11 := Node{
 		ID:             3,
 		ParentID:       2,
 		ValueToCompare: &value.Value{Value: int64(30), Type: value.Int64},
-		Comparer:       &comparator.Equal{},
+		Comparer:       &compare.Equal{},
 		Result:         &value.Value{Value: "prize2", Type: value.String},
 	}
 	leaf12 := Node{
 		ID:             4,
 		ParentID:       2,
 		ValueToCompare: &value.Value{Value: int64(30), Type: value.Int64},
-		Comparer:       &comparator.Greater{},
+		Comparer:       &compare.Greater{},
 		Result:         &value.Value{Value: "prize3", Type: value.String},
 	}
 	leaf13 := Node{
 		ID:             5,
 		ParentID:       2,
 		ValueToCompare: &value.Value{Value: int64(30), Type: value.Int64},
-		Comparer:       &comparator.Lesser{},
+		Comparer:       &compare.Lesser{},
 		Result:         &value.Value{Value: "prize4", Type: value.String},
 	}
 	node1 := Node{
@@ -47,7 +47,7 @@ func TestResolveTree_SimpleTree(t *testing.T) {
 		ID:             2,
 		ParentID:       0,
 		ValueToCompare: &value.Value{Value: int64(60), Type: value.Int64},
-		Comparer:       &comparator.Lesser{},
+		Comparer:       &compare.Lesser{},
 	}
 	root := Node{
 		ID:       0,
@@ -112,28 +112,28 @@ func userTree() *Tree {
 		ParentID:       2,
 		ValueToCompare: &value.Value{Type: value.Int, Value: 30},
 		Result:         &value.Value{Type: value.String, Value: "node6"},
-		Comparer:       &comparator.Greater{},
+		Comparer:       &compare.Greater{},
 	}
 	node5 := &Node{
 		ID:             5,
 		ParentID:       2,
 		ValueToCompare: &value.Value{Type: value.Int, Value: 30},
 		Result:         &value.Value{Type: value.String, Value: "node5"},
-		Comparer:       &comparator.Lesser{Equal: true},
+		Comparer:       &compare.Lesser{Equal: true},
 	}
 	node3 := &Node{
 		ID:             3,
 		ParentID:       1,
 		ValueToCompare: &value.Value{Type: value.String, Value: "SANTIAGO LUCIA"},
 		Result:         &value.Value{Type: value.String, Value: "node3"},
-		Comparer:       &comparator.Equal{},
+		Comparer:       &compare.Equal{},
 	}
 	node4 := &Node{
 		ID:             4,
 		ParentID:       1,
 		ValueToCompare: &value.Value{Type: value.String, Value: "LUCIA SANTIAGO"},
 		Result:         &value.Value{Type: value.String, Value: "node4"},
-		Comparer:       &comparator.Equal{},
+		Comparer:       &compare.Equal{},
 	}
 	node1 := &Node{
 		ID:             1,
@@ -142,14 +142,14 @@ func userTree() *Tree {
 		ValueToCompare: &value.Value{Type: value.Bool, Value: true},
 		PreProcessArgs: []*value.Value{{Type: value.String, Value: "FullName"}},
 		PreProcessFn:   function.PreProcessFn{Function: function.StructMethod, Name: "StructMethod"},
-		Comparer:       &comparator.Equal{},
+		Comparer:       &compare.Equal{},
 	}
 	node2 := &Node{
 		ID:             2,
 		ParentID:       0,
 		Childes:        []*Node{node5, node6},
 		ValueToCompare: &value.Value{Type: value.Bool, Value: false},
-		Comparer:       &comparator.Equal{},
+		Comparer:       &compare.Equal{},
 		PreProcessArgs: []*value.Value{{Type: value.String, Value: "Age"}},
 		PreProcessFn:   function.PreProcessFn{Function: function.StructAttribute, Name: "StructAttribute"},
 	}
@@ -252,7 +252,7 @@ func TestModifyTreeTroughJSON(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "node3", actualResult.(string))
 	})
-	t.Run("modified age comparator from gt to lt", func(t *testing.T) {
+	t.Run("modified age compare from gt to lt", func(t *testing.T) {
 		ut := userTree()
 		resultBeforeModified, err := ResolveTree(ut, newUser(55, "SANTIAGO", "LUCIA"))
 		require.NoError(t, err)
@@ -310,17 +310,17 @@ func TestMarshalComparator(t *testing.T) {
 		input    Comparer
 		expected string
 	}{
-		"marshal equal":            {input: &comparator.Equal{}, expected: `{"type":"eq"}`},
-		"marshal greater":          {input: &comparator.Greater{}, expected: `{"equal":false, "type":"gt"}`},
-		"marshal greater or equal": {input: &comparator.Greater{Equal: true}, expected: `{"equal":true, "type":"gt"}`},
-		"marshal lesser":           {input: &comparator.Lesser{}, expected: `{"equal":false, "type":"lt"}`},
-		"marshal lesser or equal":  {input: &comparator.Lesser{Equal: true}, expected: `{"equal":true, "type":"lt"}`},
+		"marshal equal":            {input: &compare.Equal{}, expected: `{"type":"eq"}`},
+		"marshal greater":          {input: &compare.Greater{}, expected: `{"equal":false, "type":"gt"}`},
+		"marshal greater or equal": {input: &compare.Greater{Equal: true}, expected: `{"equal":true, "type":"gt"}`},
+		"marshal lesser":           {input: &compare.Lesser{}, expected: `{"equal":false, "type":"lt"}`},
+		"marshal lesser or equal":  {input: &compare.Lesser{Equal: true}, expected: `{"equal":true, "type":"lt"}`},
 	}
 	for name, tst := range tests {
 		t.Run(name, func(t *testing.T) {
 			got, err := json.Marshal(&tst.input)
 			assert.NoError(t, err, "expected no error in marshaling")
-			assert.JSONEq(t, tst.expected, string(got), "expected comparator marshaled not differs %s", name)
+			assert.JSONEq(t, tst.expected, string(got), "expected compare marshaled not differs %s", name)
 		})
 	}
 }
@@ -330,11 +330,11 @@ func TestUnmarshallComparator(t *testing.T) {
 		input    string
 		expected Comparer
 	}{
-		"unmarshal equal":            {expected: &comparator.Equal{}, input: `{"type":"eq"}`},
-		"unmarshal greater":          {expected: &comparator.Greater{}, input: `{"equal":false, "type":"gt"}`},
-		"unmarshal greater or equal": {expected: &comparator.Greater{Equal: true}, input: `{"equal":true, "type":"gt"}`},
-		"unmarshal lesser":           {expected: &comparator.Lesser{}, input: `{"equal":false, "type":"lt"}`},
-		"unmarshal lesser or equal":  {expected: &comparator.Lesser{Equal: true}, input: `{"equal":true, "type":"lt"}`},
+		"unmarshal equal":            {expected: &compare.Equal{}, input: `{"type":"eq"}`},
+		"unmarshal greater":          {expected: &compare.Greater{}, input: `{"equal":false, "type":"gt"}`},
+		"unmarshal greater or equal": {expected: &compare.Greater{Equal: true}, input: `{"equal":true, "type":"gt"}`},
+		"unmarshal lesser":           {expected: &compare.Lesser{}, input: `{"equal":false, "type":"lt"}`},
+		"unmarshal lesser or equal":  {expected: &compare.Lesser{Equal: true}, input: `{"equal":true, "type":"lt"}`},
 	}
 	for name, tst := range tests {
 		t.Run(name, func(t *testing.T) {

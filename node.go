@@ -3,7 +3,7 @@ package ddt
 import (
 	"encoding/json"
 	"errors"
-	"github.com/sgrodriguez/ddt/comparator"
+	"github.com/sgrodriguez/ddt/compare"
 
 	"github.com/sgrodriguez/ddt/function"
 	"github.com/sgrodriguez/ddt/value"
@@ -103,11 +103,11 @@ func createComparatorFromJSON(message json.RawMessage) (Comparer, error) {
 	}
 	switch aux.Comp {
 	case "eq":
-		return &comparator.Equal{}, nil
+		return &compare.Equal{}, nil
 	case "lt":
-		return &comparator.Lesser{Equal: aux.Equal}, nil
+		return &compare.Lesser{Equal: aux.Equal}, nil
 	case "gt":
-		return &comparator.Greater{Equal: aux.Equal}, nil
+		return &compare.Greater{Equal: aux.Equal}, nil
 	}
 	return nil, errors.New("invalid comparer")
 }
