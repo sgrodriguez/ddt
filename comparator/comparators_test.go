@@ -1,7 +1,6 @@
-package comparators
+package comparator
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -106,58 +105,6 @@ func TestLesserCompare(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := lt.Compare(tcs.inputA, tcs.inputB)
 			assert.Equal(t, tcs.expected, got)
-		})
-	}
-}
-
-func TestMarshalComparator(t *testing.T) {
-	tests := map[string]struct {
-		input    Comparer
-		expected string
-	}{
-		"marshal equal":            {input: &Equal{}, expected: `{"type":"eq"}`},
-		"marshal greater":          {input: &Greater{}, expected: `{"equal":false, "type":"gt"}`},
-		"marshal greater or equal": {input: &Greater{true}, expected: `{"equal":true, "type":"gt"}`},
-		"marshal lesser":           {input: &Lesser{}, expected: `{"equal":false, "type":"lt"}`},
-		"marshal lesser or equal":  {input: &Lesser{true}, expected: `{"equal":true, "type":"lt"}`},
-	}
-	for name, tst := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, err := json.Marshal(&tst.input)
-			assert.NoError(t, err, "expected no error in marshaling")
-			assert.JSONEq(t, tst.expected, string(got), "expected comparator marshaled not differs %s", name)
-		})
-	}
-}
-
-func TestUnmarshallComparator(t *testing.T) {
-	tests := map[string]struct {
-		input    string
-		expected Comparer
-	}{
-		"unmarshal equal":            {expected: &Equal{}, input: `{"type":"eq"}`},
-		"unmarshal greater":          {expected: &Greater{}, input: `{"equal":false, "type":"gt"}`},
-		"unmarshal greater or equal": {expected: &Greater{true}, input: `{"equal":true, "type":"gt"}`},
-		"unmarshal lesser":           {expected: &Lesser{}, input: `{"equal":false, "type":"lt"}`},
-		"unmarshal lesser or equal":  {expected: &Lesser{true}, input: `{"equal":true, "type":"lt"}`},
-	}
-	for name, tst := range tests {
-		t.Run(name, func(t *testing.T) {
-			comp, err := CreateComparatorFromJSON(json.RawMessage(tst.input))
-			assert.NoError(t, err, "expected no error in unmarshalling")
-			assert.Equal(t, tst.expected, comp, "expected value unmarshalled differs %s", name)
-		})
-	}
-	testsError := map[string]struct {
-		input string
-	}{
-		"unmarshal unknown type":      {input: `{"type":"asd"}`},
-		"unmarshal invalid json type": {input: `{"equal":"asd"}`},
-	}
-	for name, tst := range testsError {
-		t.Run(name, func(t *testing.T) {
-			_, err := CreateComparatorFromJSON(json.RawMessage(tst.input))
-			assert.Error(t, err, "expected error in unmarshalling")
 		})
 	}
 }

@@ -1,4 +1,4 @@
-package functions
+package function
 
 import (
 	"errors"
@@ -23,7 +23,7 @@ func (t *testStructMethod) ReturnString(a, b string) string {
 }
 
 func (t *testStructMethod) ReturnError() error {
-	return errors.New("functions: test error")
+	return errors.New("function: test error")
 }
 
 func (t *testStructMethod) unexportedMethod() bool {
@@ -54,7 +54,7 @@ func TestStructMethod(t *testing.T) {
 	t.Run("return error", func(t *testing.T) {
 		_, err := StructMethod(&a, "ReturnError")
 		assert.Error(t, err)
-		assert.Equal(t, "functions: test error", err.Error(), "expect same error msg")
+		assert.EqualError(t, err, "function: test error", "expect same error msg")
 	})
 	testErrors := map[string]struct {
 		FnArgs []interface{}
@@ -72,6 +72,11 @@ func TestStructMethod(t *testing.T) {
 			assert.Error(t, err)
 		})
 	}
+	t.Run("nil input", func(t *testing.T) {
+		_, err := StructMethod(nil, "ReturnError")
+		assert.Error(t, err)
+		assert.EqualError(t, err, "structMethod invalid methods args")
+	})
 }
 
 func TestStructMethodInvalidParameters(t *testing.T) {
@@ -94,7 +99,7 @@ func TestStructMethodInvalidParameters(t *testing.T) {
 	}
 }
 
-func TestStructProperty(t *testing.T) {
+func TestStructAttribute(t *testing.T) {
 	s := &struct {
 		propOne bool
 		PropTwo string
@@ -105,22 +110,22 @@ func TestStructProperty(t *testing.T) {
 		25,
 	}
 
-	t.Run("get struct property PropTwo", func(t *testing.T) {
-		p2, err := StructProperty(s, "PropTwo")
+	t.Run("get struct attribute AttributeTwo", func(t *testing.T) {
+		p2, err := StructAttribute(s, "PropTwo")
 		assert.NoError(t, err)
 		p2Stringed := p2.(string)
 		assert.Equal(t, s.PropTwo, p2Stringed)
 
 	})
 
-	t.Run("get struct property propOne", func(t *testing.T) {
-		_, err := StructProperty(s, "propOne")
+	t.Run("get struct attribute propOne", func(t *testing.T) {
+		_, err := StructAttribute(s, "propOne")
 		assert.Error(t, err)
 
 	})
 
-	t.Run("get struct property Age", func(t *testing.T) {
-		age, err := StructProperty(s, "Age")
+	t.Run("get struct attribute Age", func(t *testing.T) {
+		age, err := StructAttribute(s, "Age")
 		assert.NoError(t, err)
 		ageInt := age.(int64)
 		assert.Equal(t, s.Age, ageInt)
@@ -128,13 +133,13 @@ func TestStructProperty(t *testing.T) {
 	})
 
 	t.Run("invalid args", func(t *testing.T) {
-		_, err := StructProperty(s, "unknownField")
+		_, err := StructAttribute(s, "unknownField")
 		assert.Error(t, err)
 
-		_, err = StructProperty(s, 123)
+		_, err = StructAttribute(s, 123)
 		assert.Error(t, err)
 
-		_, err = StructProperty(s)
+		_, err = StructAttribute(s)
 		assert.Error(t, err)
 
 	})

@@ -1,15 +1,9 @@
-package comparators
+package comparator
 
 import (
 	"encoding/json"
-	"errors"
 	"reflect"
 )
-
-// Comparer interface
-type Comparer interface {
-	Compare(a, b interface{}) bool
-}
 
 // Equal comparer
 type Equal struct{}
@@ -124,24 +118,4 @@ func (g *Greater) MarshalJSON() ([]byte, error) {
 		"gt",
 		g.Equal,
 	})
-}
-
-// CreateComparatorFromJSON ...
-func CreateComparatorFromJSON(message json.RawMessage) (Comparer, error) {
-	aux := &struct {
-		Comp  string `json:"type"`
-		Equal bool   `json:"equal"`
-	}{}
-	if err := json.Unmarshal(message, aux); err != nil {
-		return nil, err
-	}
-	switch aux.Comp {
-	case "eq":
-		return &Equal{}, nil
-	case "lt":
-		return &Lesser{Equal: aux.Equal}, nil
-	case "gt":
-		return &Greater{Equal: aux.Equal}, nil
-	}
-	return nil, errors.New("unmarshal comparer map failed")
 }

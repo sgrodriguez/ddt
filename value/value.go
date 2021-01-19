@@ -27,6 +27,36 @@ const (
 	String = "string"
 )
 
+// NewValue creates a valid value
+func NewValue(t Type, val interface{}) (*Value, error) {
+	switch t {
+	case Bool:
+		if _, ok := val.(bool); !ok {
+			return nil, errors.New("invalid bool value")
+		}
+	case String:
+		if _, ok := val.(string); !ok {
+			return nil, errors.New("invalid string value")
+		}
+	case Int64:
+		if _, ok := val.(int64); !ok {
+			return nil, errors.New("invalid int64 value")
+		}
+	case Int:
+		if _, ok := val.(int); !ok {
+			return nil, errors.New("invalid int value")
+		}
+	case Float64:
+		if _, ok := val.(float64); !ok {
+			return nil, errors.New("invalid float64 value")
+		}
+	}
+	return &Value{
+		Type:  t,
+		Value: val,
+	}, nil
+}
+
 // UnmarshalJSON ...
 func (v *Value) UnmarshalJSON(data []byte) error {
 	val := struct {
@@ -74,7 +104,7 @@ func (v *Value) UnmarshalJSON(data []byte) error {
 		v.Value = s
 		return nil
 	}
-	return errors.New("unmarshal failed Value invalid type")
+	return errors.New("unmarshal failed invalid value type")
 }
 
 // GetValueInterfaces ...

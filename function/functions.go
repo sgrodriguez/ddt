@@ -1,4 +1,4 @@
-package functions
+package function
 
 import (
 	"errors"
@@ -16,27 +16,28 @@ func (p PreProcessFn) Empty() bool {
 	return p.Name == ""
 }
 
-// StructMethod ...
+// StructMethod ... explain better what is
 func StructMethod(str interface{}, args ...interface{}) (interface{}, error) {
-	if len(args) < 1 {
-		return nil, errors.New("structMethod InvalidDecisionTreeFuncArg")
+	if len(args) < 1 || str == nil {
+		return nil, errors.New("structMethod invalid methods args")
 	}
 	methodName, ok := args[0].(string)
 	if !ok {
-		return nil, errors.New("structMethod InvalidDecisionTreeFuncArg")
+		return nil, errors.New("structMethod invalid methods args")
 	}
 	inputs := make([]reflect.Value, len(args)-1)
-	for i, j := range args {
-		if i == 0 {
-			continue
-		}
-		inputs[i-1] = reflect.ValueOf(j)
+	// avoid first value of args
+	for i, j := range args[1:] {
+		inputs[i] = reflect.ValueOf(j)
 	}
 	method := reflect.ValueOf(str).MethodByName(methodName)
 	if !method.IsValid() {
-		return nil, errors.New("structMethod InvalidDecisionTreeFuncArg")
+		return nil, errors.New("structMethod invalid methods args")
 	}
 	res := method.Call(inputs)
+	if len(res) == 0 {
+		return nil, errors.New("structMethod empty result from method call")
+	}
 	errorInterface := reflect.TypeOf((*error)(nil)).Elem()
 	for _, r := range res {
 		if r.Type().Implements(errorInterface) {
@@ -46,24 +47,24 @@ func StructMethod(str interface{}, args ...interface{}) (interface{}, error) {
 		}
 	}
 	if !res[0].CanInterface() {
-		return nil, errors.New("structMethod can not access the value")
+		return nil, errors.New("structMethod can not interface result value")
 	}
 	return res[0].Interface(), nil
 }
 
-// StructProperty ...
-func StructProperty(str interface{}, args ...interface{}) (interface{}, error) {
-	if len(args) < 1 {
-		return nil, errors.New("structProperty InvalidDecisionTreeFuncArg")
+// StructAttribute ...  explain better what is
+func StructAttribute(str interface{}, args ...interface{}) (interface{}, error) {
+	if len(args) < 1 || str == nil {
+		return nil, errors.New("structAttribute invalid args")
 	}
 	prop, ok := args[0].(string)
 	if !ok {
-		return nil, errors.New("structProperty InvalidDecisionTreeFuncArg")
+		return nil, errors.New("structAttribute invalid args")
 	}
 	r := reflect.ValueOf(str)
 	val := reflect.Indirect(r).FieldByName(prop)
 	if !val.IsValid() || !val.CanInterface() {
-		return nil, errors.New("structProperty can not access the value")
+		return nil, errors.New("structAttribute invalid struct attribute")
 	}
 	return val.Interface(), nil
 }

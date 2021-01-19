@@ -2,10 +2,92 @@ package value
 
 import (
 	"encoding/json"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestNewValue(t *testing.T) {
+	testCases := map[string]struct {
+		valType       Type
+		concreteValue interface{}
+		expectedValue Value
+	}{
+		"int64 valid value": {
+			valType:       Int64,
+			concreteValue: int64(10),
+			expectedValue: Value{Value: int64(10), Type: Int64},
+		},
+		"bool valid value": {
+			valType:       Bool,
+			concreteValue: true,
+			expectedValue: Value{Value: true, Type: Bool},
+		},
+		"int valid value": {
+			valType:       Int,
+			concreteValue: 10,
+			expectedValue: Value{Value: 10, Type: Int},
+		},
+		"float64 valid value": {
+			valType:       Float64,
+			concreteValue: 4.20,
+			expectedValue: Value{Value: 4.20, Type: Float64},
+		},
+		"string valid value": {
+			valType:       String,
+			concreteValue: "xd",
+			expectedValue: Value{Value: "xd", Type: String},
+		},
+	}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			val, err := NewValue(tc.valType, tc.concreteValue)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedValue.Value, val.Value)
+			assert.Equal(t, tc.expectedValue.Type, val.Type)
+		})
+	}
+	invalidValueTestCases := map[string]struct {
+		valType       Type
+		concreteValue interface{}
+	}{
+		"int64 invalid int concrete value": {
+			valType:       Int64,
+			concreteValue: 10,
+		},
+		"int64 invalid bool concrete value": {
+			valType:       Int64,
+			concreteValue: true,
+		},
+		"int invalid int64 concrete value": {
+			valType:       Int,
+			concreteValue: int64(10),
+		},
+		"int invalid bool concrete value": {
+			valType:       Int,
+			concreteValue: false,
+		},
+		"bool invalid concrete value": {
+			valType:       Bool,
+			concreteValue: 0,
+		},
+		"float64 invalid concrete value": {
+			valType:       Float64,
+			concreteValue: false,
+		},
+		"string invalid concrete value": {
+			valType:       String,
+			concreteValue: 10,
+		},
+	}
+	for name, tc := range invalidValueTestCases {
+		t.Run(name, func(t *testing.T) {
+			_, err := NewValue(tc.valType, tc.concreteValue)
+			require.Error(t, err)
+		})
+	}
+}
 
 func TestValueMarshal(t *testing.T) {
 	tests := map[string]struct {
