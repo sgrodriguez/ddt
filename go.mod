@@ -1,4 +1,4 @@
-module github.com/sgrodriguez/ddt
+module github.com/sgrodriguez/go-ddt
 
 go 1.13
 
