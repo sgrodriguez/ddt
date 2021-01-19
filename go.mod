@@ -1,6 +1,6 @@
-module github.com/sgrodriguez/go-ddt
+module github.com/sgrodriguez/ddt
 
-go 1.13
+go 1.15
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
