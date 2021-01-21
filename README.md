@@ -2,7 +2,7 @@
 [![codecov](https://codecov.io/gh/sgrodriguez/go-ddt/branch/master/graph/badge.svg?token=8JU0YG71WZ)](https://codecov.io/gh/sgrodriguez/go-ddt)
 [![Build Status](https://travis-ci.com/sgrodriguez/ddt.svg?branch=master)](https://travis-ci.com/sgrodriguez/ddt)
 # DDT
-##Dynamic decision tree
+## Dynamic decision tree
 DDT allows building custom decision trees based in a set of defined rules, avoiding the task of writing ifs/switches statements.
 
 ## Examples
