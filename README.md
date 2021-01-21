@@ -6,7 +6,7 @@
 DDT allows building custom decision trees based in a set of defined rules, avoiding the task of writing ifs/switches statements.
 
 ## Examples
-###Create user tree
+### Create user tree
 Use a struct as input of the tree and pre-process data before comparing with the next level of nodes.
 In this example we use some methods and attributes of the user struct.  
 ![alt text](docs/user_tree.png?raw=true)
