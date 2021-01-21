@@ -4,12 +4,11 @@
 # DDT
 ## Dynamic decision tree
 DDT allows building custom decision trees based in a set of defined rules, programmatically or from json.
+
 When making a decision, it allows adding a pre-processing stage to the input before comparing it with the following possible branches of the tree.
+ 
 One of the default preprocessing functions in ddt is calling a method of a struct (CallStructMethod) and getting the attribute of a struct (GetStructAttribute) using reflection.
 
-
-
-It also allows adding a pre-processing stage when making a decision and comparing it with the next possible branch of the tree
 ## Examples
 ### Create user tree
 Use a struct as input of the tree and pre-process data before comparing with the next level of nodes.
