@@ -47,7 +47,7 @@ func TestResolveTree_SimpleTree(t *testing.T) {
 		ID:             2,
 		ParentID:       0,
 		ValueToCompare: &value.Value{Value: int64(60), Type: value.Int64},
-		Comparer:       &compare.Lesser{},
+		Comparer:       &compare.Lesser{Equal: true},
 	}
 	root := Node{
 		ID:       0,
@@ -141,7 +141,7 @@ func userTree() *Tree {
 		Children:       []*Node{node3, node4},
 		ValueToCompare: &value.Value{Type: value.Bool, Value: true},
 		PreProcessArgs: []*value.Value{{Type: value.String, Value: "FullName"}},
-		PreProcessFn:   function.PreProcessFn{Function: function.StructMethod, Name: "StructMethod"},
+		PreProcessFn:   function.PreProcessFn{Function: function.CallStructMethod, Name: "CallStructMethod"},
 		Comparer:       &compare.Equal{},
 	}
 	node2 := &Node{
@@ -151,12 +151,12 @@ func userTree() *Tree {
 		ValueToCompare: &value.Value{Type: value.Bool, Value: false},
 		Comparer:       &compare.Equal{},
 		PreProcessArgs: []*value.Value{{Type: value.String, Value: "Age"}},
-		PreProcessFn:   function.PreProcessFn{Function: function.StructAttribute, Name: "StructAttribute"},
+		PreProcessFn:   function.PreProcessFn{Function: function.GetStructAttribute, Name: "GetStructAttribute"},
 	}
 	root := &Node{
 		Children:       []*Node{node1, node2},
 		PreProcessArgs: []*value.Value{{Type: value.String, Value: "UnderAge"}},
-		PreProcessFn:   function.PreProcessFn{Function: function.StructMethod, Name: "StructMethod"},
+		PreProcessFn:   function.PreProcessFn{Function: function.CallStructMethod, Name: "CallStructMethod"},
 		ID:             0,
 		ParentID:       -1,
 	}
@@ -199,10 +199,10 @@ func TestResolveTree_UserTree(t *testing.T) {
 		assert.EqualError(t, err, "value not found when comparing with all children nodes")
 		_, err = ResolveTree(userTree, nil)
 		require.Error(t, err)
-		assert.EqualError(t, err, "structMethod invalid methods args")
+		assert.EqualError(t, err, "callStructMethod invalid methods args")
 		_, err = ResolveTree(userTree, 123)
 		require.Error(t, err)
-		assert.EqualError(t, err, "structMethod invalid methods args")
+		assert.EqualError(t, err, "callStructMethod invalid methods args")
 
 	})
 	t.Run("handling method error", func(t *testing.T) {
@@ -216,13 +216,13 @@ func TestResolveTree_UserTree(t *testing.T) {
 		node1 := userTree.Root.Children[0]
 		node1.PreProcessArgs = []*value.Value{{Type: value.String, Value: "ASD"}}
 		_, err = ResolveTree(userTree, &user{Age: 11})
-		assert.EqualError(t, err, "structMethod invalid methods args")
+		assert.EqualError(t, err, "callStructMethod invalid methods args")
 	})
 	t.Run("invalid struct attribute name", func(t *testing.T) {
 		node2 := userTree.Root.Children[1]
 		node2.PreProcessArgs = []*value.Value{{Type: value.String, Value: "ASD"}}
 		_, err = ResolveTree(userTree, &user{Age: 30})
-		assert.EqualError(t, err, "structAttribute invalid struct attribute")
+		assert.EqualError(t, err, "getStructAttribute invalid struct attribute")
 	})
 }
 
@@ -233,7 +233,7 @@ func TestModifyTreeTroughJSON(t *testing.T) {
 		valueBeforeModified, err := ResolveTree(ut, newUser(11, "LUCIA", "SANTIAGO"))
 		require.NoError(t, err)
 		assert.Equal(t, "node4", valueBeforeModified.(string))
-		newTree := []byte(`{"nodes":[{"preProcessFnName":"StructMethod","id":0,"parentId":-1,"preProcessFnArgs":[{"Value":"UnderAge","Type":"string"}]},{"preProcessFnName":"StructMethod","id":1,"parentId":0,"preProcessFnArgs":[{"Value":"FullName","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":true,"Type":"bool"}},{"preProcessFnName":"StructAttribute","id":2,"parentId":0,"preProcessFnArgs":[{"Value":"Age","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":false,"Type":"bool"}},{"preProcessFnName":"","id":3,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"SANTIAGO LUCIA","Type":"string"},"result":{"Value":"node3","Type":"string"}},{"preProcessFnName":"","id":4,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"LUCIA SANTIAGO","Type":"string"},"result":{"Value":100,"Type":"int"}},{"preProcessFnName":"","id":5,"parentId":2,"comparer":{"type":"lt","equal":true},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node5","Type":"string"}},{"preProcessFnName":"","id":6,"parentId":2,"comparer":{"type":"gt","equal":false},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node6","Type":"string"}}],"name":"userTree"}`)
+		newTree := []byte(`{"nodes":[{"preProcessFnName":"CallStructMethod","id":0,"parentId":-1,"preProcessFnArgs":[{"Value":"UnderAge","Type":"string"}]},{"preProcessFnName":"CallStructMethod","id":1,"parentId":0,"preProcessFnArgs":[{"Value":"FullName","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":true,"Type":"bool"}},{"preProcessFnName":"GetStructAttribute","id":2,"parentId":0,"preProcessFnArgs":[{"Value":"Age","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":false,"Type":"bool"}},{"preProcessFnName":"","id":3,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"SANTIAGO LUCIA","Type":"string"},"result":{"Value":"node3","Type":"string"}},{"preProcessFnName":"","id":4,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"LUCIA SANTIAGO","Type":"string"},"result":{"Value":100,"Type":"int"}},{"preProcessFnName":"","id":5,"parentId":2,"comparer":{"type":"lt","equal":true},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node5","Type":"string"}},{"preProcessFnName":"","id":6,"parentId":2,"comparer":{"type":"gt","equal":false},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node6","Type":"string"}}],"name":"userTree"}`)
 		err = json.Unmarshal(newTree, ut)
 		require.NoError(t, err)
 		actualResult, err := ResolveTree(ut, newUser(11, "LUCIA", "SANTIAGO"))
@@ -245,7 +245,7 @@ func TestModifyTreeTroughJSON(t *testing.T) {
 		resultBeforeModified, err := ResolveTree(ut, newUser(33, "SANTIAGO", "LUCIA"))
 		require.NoError(t, err)
 		assert.Equal(t, "node6", resultBeforeModified.(string))
-		newTree := []byte(`{"nodes":[{"preProcessFnName":"StructMethod","id":0,"parentId":-1,"preProcessFnArgs":[{"Value":"UnderAge","Type":"string"}]},{"preProcessFnName":"StructMethod","id":1,"parentId":0,"preProcessFnArgs":[{"Value":"FullName","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":false,"Type":"bool"}},{"preProcessFnName":"StructAttribute","id":2,"parentId":0,"preProcessFnArgs":[{"Value":"Age","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":true,"Type":"bool"}},{"preProcessFnName":"","id":3,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"SANTIAGO LUCIA","Type":"string"},"result":{"Value":"node3","Type":"string"}},{"preProcessFnName":"","id":4,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"LUCIA SANTIAGO","Type":"string"},"result":{"Value":"node4","Type":"string"}},{"preProcessFnName":"","id":5,"parentId":2,"comparer":{"type":"lt","equal":true},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node5","Type":"string"}},{"preProcessFnName":"","id":6,"parentId":2,"comparer":{"type":"gt","equal":false},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node6","Type":"string"}}],"name":"userTree"}`)
+		newTree := []byte(`{"nodes":[{"preProcessFnName":"CallStructMethod","id":0,"parentId":-1,"preProcessFnArgs":[{"Value":"UnderAge","Type":"string"}]},{"preProcessFnName":"CallStructMethod","id":1,"parentId":0,"preProcessFnArgs":[{"Value":"FullName","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":false,"Type":"bool"}},{"preProcessFnName":"GetStructAttribute","id":2,"parentId":0,"preProcessFnArgs":[{"Value":"Age","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":true,"Type":"bool"}},{"preProcessFnName":"","id":3,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"SANTIAGO LUCIA","Type":"string"},"result":{"Value":"node3","Type":"string"}},{"preProcessFnName":"","id":4,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"LUCIA SANTIAGO","Type":"string"},"result":{"Value":"node4","Type":"string"}},{"preProcessFnName":"","id":5,"parentId":2,"comparer":{"type":"lt","equal":true},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node5","Type":"string"}},{"preProcessFnName":"","id":6,"parentId":2,"comparer":{"type":"gt","equal":false},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node6","Type":"string"}}],"name":"userTree"}`)
 		err = json.Unmarshal(newTree, ut)
 		require.NoError(t, err)
 		actualResult, err := ResolveTree(ut, newUser(33, "SANTIAGO", "LUCIA"))
@@ -257,14 +257,14 @@ func TestModifyTreeTroughJSON(t *testing.T) {
 		resultBeforeModified, err := ResolveTree(ut, newUser(55, "SANTIAGO", "LUCIA"))
 		require.NoError(t, err)
 		assert.Equal(t, "node6", resultBeforeModified.(string))
-		newTree := []byte(`{"nodes":[{"preProcessFnName":"StructMethod","id":0,"parentId":-1,"preProcessFnArgs":[{"Value":"UnderAge","Type":"string"}]},{"preProcessFnName":"StructMethod","id":1,"parentId":0,"preProcessFnArgs":[{"Value":"FullName","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":true,"Type":"bool"}},{"preProcessFnName":"StructAttribute","id":2,"parentId":0,"preProcessFnArgs":[{"Value":"Age","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":false,"Type":"bool"}},{"preProcessFnName":"","id":3,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"SANTIAGO LUCIA","Type":"string"},"result":{"Value":"node3","Type":"string"}},{"preProcessFnName":"","id":4,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"LUCIA SANTIAGO","Type":"string"},"result":{"Value":"node4","Type":"string"}},{"preProcessFnName":"","id":5,"parentId":2,"comparer":{"type":"gt","equal":false},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node5","Type":"string"}},{"preProcessFnName":"","id":6,"parentId":2,"comparer":{"type":"lt","equal":true},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node6","Type":"string"}}],"name":"userTree"}`)
+		newTree := []byte(`{"nodes":[{"preProcessFnName":"CallStructMethod","id":0,"parentId":-1,"preProcessFnArgs":[{"Value":"UnderAge","Type":"string"}]},{"preProcessFnName":"CallStructMethod","id":1,"parentId":0,"preProcessFnArgs":[{"Value":"FullName","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":true,"Type":"bool"}},{"preProcessFnName":"GetStructAttribute","id":2,"parentId":0,"preProcessFnArgs":[{"Value":"Age","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":false,"Type":"bool"}},{"preProcessFnName":"","id":3,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"SANTIAGO LUCIA","Type":"string"},"result":{"Value":"node3","Type":"string"}},{"preProcessFnName":"","id":4,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"LUCIA SANTIAGO","Type":"string"},"result":{"Value":"node4","Type":"string"}},{"preProcessFnName":"","id":5,"parentId":2,"comparer":{"type":"gt","equal":false},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node5","Type":"string"}},{"preProcessFnName":"","id":6,"parentId":2,"comparer":{"type":"lt","equal":true},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node6","Type":"string"}}],"name":"userTree"}`)
 		err = json.Unmarshal(newTree, ut)
 		require.NoError(t, err)
 		actualResult, err := ResolveTree(ut, newUser(55, "SANTIAGO", "LUCIA"))
 		require.NoError(t, err)
 		assert.Equal(t, "node5", actualResult.(string))
 	})
-	t.Run("modified Fullname pre process StructMethod fn to FirstName StructAttribute fn", func(t *testing.T) {
+	t.Run("modified Fullname pre process CallStructMethod fn to FirstName GetStructAttribute fn", func(t *testing.T) {
 		ut := userTree()
 		resultBeforeModified, err := ResolveTree(ut, newUser(11, "SANTIAGO", "LUCIA"))
 		require.NoError(t, err)
@@ -272,7 +272,7 @@ func TestModifyTreeTroughJSON(t *testing.T) {
 		resultBeforeModified, err = ResolveTree(ut, newUser(11, "LUCIA", "SANTIAGO"))
 		require.NoError(t, err)
 		assert.Equal(t, "node4", resultBeforeModified.(string))
-		newTree := []byte(`{"nodes":[{"preProcessFnName":"StructMethod","id":0,"parentId":-1,"preProcessFnArgs":[{"Value":"UnderAge","Type":"string"}]},{"preProcessFnName":"StructAttribute","id":1,"parentId":0,"preProcessFnArgs":[{"Value":"FirstName","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":true,"Type":"bool"}},{"preProcessFnName":"StructAttribute","id":2,"parentId":0,"preProcessFnArgs":[{"Value":"Age","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":false,"Type":"bool"}},{"preProcessFnName":"","id":3,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"SANTIAGO","Type":"string"},"result":{"Value":"node3","Type":"string"}},{"preProcessFnName":"","id":4,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"LUCIA","Type":"string"},"result":{"Value":"node4","Type":"string"}},{"preProcessFnName":"","id":5,"parentId":2,"comparer":{"type":"lt","equal":true},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node5","Type":"string"}},{"preProcessFnName":"","id":6,"parentId":2,"comparer":{"type":"gt","equal":false},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node6","Type":"string"}}],"name":"userTree"}`)
+		newTree := []byte(`{"nodes":[{"preProcessFnName":"CallStructMethod","id":0,"parentId":-1,"preProcessFnArgs":[{"Value":"UnderAge","Type":"string"}]},{"preProcessFnName":"GetStructAttribute","id":1,"parentId":0,"preProcessFnArgs":[{"Value":"FirstName","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":true,"Type":"bool"}},{"preProcessFnName":"GetStructAttribute","id":2,"parentId":0,"preProcessFnArgs":[{"Value":"Age","Type":"string"}],"comparer":{"type":"eq"},"valueToCompare":{"Value":false,"Type":"bool"}},{"preProcessFnName":"","id":3,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"SANTIAGO","Type":"string"},"result":{"Value":"node3","Type":"string"}},{"preProcessFnName":"","id":4,"parentId":1,"comparer":{"type":"eq"},"valueToCompare":{"Value":"LUCIA","Type":"string"},"result":{"Value":"node4","Type":"string"}},{"preProcessFnName":"","id":5,"parentId":2,"comparer":{"type":"lt","equal":true},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node5","Type":"string"}},{"preProcessFnName":"","id":6,"parentId":2,"comparer":{"type":"gt","equal":false},"valueToCompare":{"Value":30,"Type":"int"},"result":{"Value":"node6","Type":"string"}}],"name":"userTree"}`)
 		err = json.Unmarshal(newTree, ut)
 		require.NoError(t, err)
 		actualResult, err := ResolveTree(ut, newUser(11, "SANTIAGO", "xd"))

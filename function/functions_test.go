@@ -34,25 +34,25 @@ func TestStructMethod(t *testing.T) {
 	t.Parallel()
 	a := testStructMethod(1)
 	t.Run("return bool", func(t *testing.T) {
-		val, err := StructMethod(&a, "ReturnBool")
+		val, err := CallStructMethod(&a, "ReturnBool")
 		assert.NoError(t, err)
 		valBool := val.(bool)
 		assert.Equal(t, true, valBool)
 	})
 	t.Run("return int", func(t *testing.T) {
-		val, err := StructMethod(&a, "ReturnInt", 2)
+		val, err := CallStructMethod(&a, "ReturnInt", 2)
 		assert.NoError(t, err)
 		valInt := val.(int)
 		assert.Equal(t, 20, valInt)
 	})
 	t.Run("return string", func(t *testing.T) {
-		val, err := StructMethod(&a, "ReturnString", "Santiago", " Rodriguez")
+		val, err := CallStructMethod(&a, "ReturnString", "Santiago", " Rodriguez")
 		assert.NoError(t, err)
 		valString := val.(string)
 		assert.Equal(t, "Santiago Rodriguez", valString)
 	})
 	t.Run("return error", func(t *testing.T) {
-		_, err := StructMethod(&a, "ReturnError")
+		_, err := CallStructMethod(&a, "ReturnError")
 		assert.Error(t, err)
 		assert.EqualError(t, err, "function: test error", "expect same error msg")
 	})
@@ -68,14 +68,14 @@ func TestStructMethod(t *testing.T) {
 
 	for name, tcs := range testErrors {
 		t.Run(name, func(t *testing.T) {
-			_, err := StructMethod(&a, tcs.FnArgs...)
+			_, err := CallStructMethod(&a, tcs.FnArgs...)
 			assert.Error(t, err)
 		})
 	}
 	t.Run("nil input", func(t *testing.T) {
-		_, err := StructMethod(nil, "ReturnError")
+		_, err := CallStructMethod(nil, "ReturnError")
 		assert.Error(t, err)
-		assert.EqualError(t, err, "structMethod invalid methods args")
+		assert.EqualError(t, err, "callStructMethod invalid methods args")
 	})
 }
 
@@ -94,7 +94,7 @@ func TestStructMethodInvalidParameters(t *testing.T) {
 
 	for name, tcs := range testPanics {
 		t.Run(name, func(t *testing.T) {
-			assert.Panics(t, func() { StructMethod(&a, tcs.FnArgs...) }, "Should panic")
+			assert.Panics(t, func() { CallStructMethod(&a, tcs.FnArgs...) }, "Should panic")
 		})
 	}
 }
@@ -111,7 +111,7 @@ func TestStructAttribute(t *testing.T) {
 	}
 
 	t.Run("get struct attribute AttributeTwo", func(t *testing.T) {
-		p2, err := StructAttribute(s, "PropTwo")
+		p2, err := GetStructAttribute(s, "PropTwo")
 		assert.NoError(t, err)
 		p2Stringed := p2.(string)
 		assert.Equal(t, s.PropTwo, p2Stringed)
@@ -119,13 +119,13 @@ func TestStructAttribute(t *testing.T) {
 	})
 
 	t.Run("get struct attribute propOne", func(t *testing.T) {
-		_, err := StructAttribute(s, "propOne")
+		_, err := GetStructAttribute(s, "propOne")
 		assert.Error(t, err)
 
 	})
 
 	t.Run("get struct attribute Age", func(t *testing.T) {
-		age, err := StructAttribute(s, "Age")
+		age, err := GetStructAttribute(s, "Age")
 		assert.NoError(t, err)
 		ageInt := age.(int64)
 		assert.Equal(t, s.Age, ageInt)
@@ -133,13 +133,13 @@ func TestStructAttribute(t *testing.T) {
 	})
 
 	t.Run("invalid args", func(t *testing.T) {
-		_, err := StructAttribute(s, "unknownField")
+		_, err := GetStructAttribute(s, "unknownField")
 		assert.Error(t, err)
 
-		_, err = StructAttribute(s, 123)
+		_, err = GetStructAttribute(s, 123)
 		assert.Error(t, err)
 
-		_, err = StructAttribute(s)
+		_, err = GetStructAttribute(s)
 		assert.Error(t, err)
 
 	})

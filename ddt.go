@@ -28,8 +28,8 @@ func ResolveTree(t *Tree, input interface{}) (interface{}, error) {
 
 // DefaultFns default function
 var DefaultFns = []function.PreProcessFn{
-	{Function: function.StructMethod, Name: "StructMethod"},
-	{Function: function.StructAttribute, Name: "StructAttribute"},
+	{Function: function.CallStructMethod, Name: "CallStructMethod"},
+	{Function: function.GetStructAttribute, Name: "GetStructAttribute"},
 }
 
 func addNewPreProcessFn(newPreProcessFn []function.PreProcessFn) map[string]function.PreProcessFn {
